@@ -248,6 +248,14 @@
             border-color: var(--incorrect) !important;
         }
 
+        .response-review { text-align: left; }
+        .review-item { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 10px 0; overflow-wrap: anywhere; }
+        .review-item.correct { border-left: 5px solid #10b981; }
+        .review-item.incorrect { border-left: 5px solid #ef4444; }
+        .review-question { font-weight: 700; margin-bottom: 8px; line-height: 1.45; }
+        .review-your { color: #dc2626; margin: 5px 0; }
+        .review-your.correct-answer { color: #059669; }
+        .review-correct { color: #059669; font-weight: 700; margin: 5px 0; }
         .footer-credit {
             margin-top: 25px;
             padding-top: 15px;
@@ -312,7 +320,7 @@
             <label for="test-id">Test ID *</label>
             <input type="text" id="test-id" value="EWASTE-CARD-QUIZ-35" readonly style="background: rgba(0,0,0,0.03); font-weight: bold;">
         </div>
-     <button type="button" class="btn-submit-top btn-block" onclick="startQuiz()">Start Quiz</button>
+        <button type="button" class="btn-submit-top btn-block" onclick="startQuiz()">Start Quiz</button>
     </div>
 
     <!-- Interactive Card Area -->
@@ -336,7 +344,8 @@
         <p id="score-text" style="font-size:1.1rem;"></p>
         <p id="time-taken-text"></p>
         <p id="sync-status" style="font-size: 0.95rem; font-weight: bold; color: var(--primary);"></p>
-        
+        <h3 style="text-align:left;margin-top:24px;">Your Responses and Correct Answers</h3>
+        <div id="response-review" class="response-review" aria-live="polite"></div>
         <button type="button" class="btn-submit-top btn-block" onclick="downloadPDFReport()">📄 Download Complete PDF Report</button>
         <button type="button" class="btn-nav btn-block" style="background:#4b5563;" onclick="location.reload()">🔄 Restart Quiz</button>
     </div>
@@ -348,10 +357,8 @@
 </div>
 
 <script>
-// OPTIONAL GOOGLE SHEETS INTEGRATION:
- // Paste your deployed Google Apps Script Web App URL between the quotes.
- // Leave as an empty string ("") to disable score syncing.
- const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxsWkbcvdl9h5IilRY2kCuF-eODr7gREzbcXAtrxGfOtKtXV6-pdQiMFcRMnNrCtz9/exec";
+// Google Sheets score tracker URL is stored in the code, not shown to students.
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxsWkbcvdl9h5IilRY2kCuF-eODr7gREzbcXAtrxGfOtKtXV6-pdQiMFcRMnNrCtz9/exec";
 
  const originalQuestions = [
     { q: "When did India's Solid Waste Management Rules 2026 come into effect?", options: ["1st January 2026", "1st April 2026", "15th August 2026", "2nd October 2026"], answer: 1 },
@@ -586,11 +593,12 @@ function submitQuiz() {
     const name = document.getElementById('student-name').value.trim();
     const district = document.getElementById('student-district').value.trim();
     const testId = document.getElementById('test-id').value.trim();
-    const scriptUrl = document.getElementById('score-script-url').value.trim();
+    const scriptUrl = SCRIPT_URL;
     const percentage = ((score / quizQuestions.length) * 100).toFixed(1);
 
-    document.getElementById('score-text').innerHTML = `Candidate: <strong>${name}</strong> (${district})<br>Score: <strong>${score} / ${quizQuestions.length}</strong> (${percentage}%)`;
-    
+    document.getElementById('score-text').innerHTML = `Candidate: <strong>${escapeHTML(name)}</strong> (${escapeHTML(district)})<br>Score: <strong>${score} / ${quizQuestions.length}</strong> (${percentage}%)`;
+    renderResponseReview();
+
     const mins = Math.floor(totalTimeSpent / 60);
     const secs = totalTimeSpent % 60;
     document.getElementById('time-taken-text').innerText = `Total Time Taken: ${mins} min ${secs} sec`;
@@ -631,6 +639,30 @@ function submitQuiz() {
     } else {
         document.getElementById('sync-status').innerText = "Quiz completed. No Google Sheets URL was entered, so no score was sent.";
     }
+}
+
+function escapeHTML(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+}
+
+function renderResponseReview() {
+    const container = document.getElementById('response-review');
+    container.innerHTML = '';
+    quizQuestions.forEach((q, idx) => {
+        const chosen = userAnswers[idx];
+        const correct = chosen === q.answer;
+        const item = document.createElement('section');
+        item.className = 'review-item ' + (correct ? 'correct' : 'incorrect');
+        const yourAnswer = chosen === null ? 'Not answered' : q.options[chosen];
+        item.innerHTML = `
+            <div class="review-question">${idx + 1}. ${escapeHTML(q.q)}</div>
+            <div class="${correct ? 'review-your correct-answer' : 'review-your'}"><strong>Your answer:</strong> ${escapeHTML(yourAnswer)} ${correct ? '✓' : '✗'}</div>
+            <div class="review-correct"><strong>Correct answer:</strong> ${escapeHTML(q.options[q.answer])}</div>
+        `;
+        container.appendChild(item);
+    });
 }
 
 function downloadPDFReport() {
@@ -711,3 +743,11 @@ function downloadPDFReport() {
 
 </body>
 </html>
+
+
+
+
+
+
+
+
