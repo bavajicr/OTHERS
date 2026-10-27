@@ -291,10 +291,7 @@
             <label for="test-id">Test ID *</label>
             <input type="text" id="test-id" value="EWASTE-CARD-QUIZ-35" readonly style="background: rgba(0,0,0,0.03); font-weight: bold;">
         </div>
-        <div class="form-group">
-            <label for="script-url">https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec:</label>
-            <input type="text" id="script-url" value="https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec" placeholder="https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec">
-        </div>
+        <!-- Google Sheet URL is configured in the SCRIPT_URL constant below. -->
         <button type="button" class="btn-submit-top btn-block" onclick="startQuiz()">Start Quiz</button>
     </div>
 
@@ -331,7 +328,12 @@
 </div>
 
 <script>
-const originalQuestions = [
+// OPTIONAL GOOGLE SHEETS INTEGRATION:
+ // Paste your deployed Google Apps Script Web App URL between the quotes.
+ // Leave as an empty string ("") to disable score syncing.
+ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec";
+
+ const originalQuestions = [
     { q: "When did India's Solid Waste Management Rules 2026 come into effect?", options: ["1st January 2026", "1st April 2026", "15th August 2026", "2nd October 2026"], answer: 1 },
     { q: "Which Indian rules currently regulate e-waste management in India?", options: ["E-Waste Management Rules 2011", "E-Waste Management Rules 2016", "E-Waste Management Rules 2022", "Solid Waste Rules 2020"], answer: 2 },
     { q: "What does E-Waste generally mean?", options: ["Food Waste", "Agricultural Waste", "Electrical and Electronic Equipment Waste", "Plastic Bottle Waste"], answer: 2 },
@@ -552,7 +554,7 @@ function submitQuiz() {
     const name = document.getElementById('student-name').value.trim();
     const district = document.getElementById('student-district').value.trim();
     const testId = document.getElementById('test-id').value.trim();
-    const scriptUrl = document.getElementById('script-url').value.trim();
+    const scriptUrl = SCRIPT_URL.trim();
     const percentage = ((score / quizQuestions.length) * 100).toFixed(1);
 
     document.getElementById('score-text').innerHTML = `Candidate: <strong>${name}</strong> (${district})<br>Score: <strong>${score} / ${quizQuestions.length}</strong> (${percentage}%)`;
@@ -667,11 +669,3 @@ function downloadPDFReport() {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
