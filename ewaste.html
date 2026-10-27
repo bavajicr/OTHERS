@@ -45,7 +45,6 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        /* Top Header Bar */
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -104,7 +103,6 @@
             color: var(--text);
         }
 
-        /* Registration Card */
         .form-group {
             margin-bottom: 15px;
         }
@@ -125,7 +123,6 @@
             box-sizing: border-box;
         }
 
-        /* Card Container & Palette */
         .question-palette {
             display: flex;
             flex-wrap: wrap;
@@ -206,7 +203,6 @@
             transform: scale(1.2);
         }
 
-        /* Bottom Controls */
         .card-controls {
             display: flex;
             justify-content: space-between;
@@ -232,7 +228,6 @@
             cursor: not-allowed;
         }
 
-        /* Results & Review Mode */
         .result-box {
             display: none;
             padding: 20px;
@@ -275,15 +270,15 @@
     <div class="top-bar">
         <div class="title">E-Waste & Mission LiFE Quiz</div>
         <div class="header-actions">
-            <button class="mode-toggle" onclick="toggleDarkMode()">🌓</button>
+            <button type="button" class="mode-toggle" onclick="toggleDarkMode()">🌓</button>
             <div class="timer-badge" id="timer" style="display:none;">⏳ 30s</div>
-            <button class="btn-submit-top" id="top-submit-btn" style="display:none;" onclick="confirmSubmit()">Submit Quiz</button>
+            <button type="button" class="btn-submit-top" id="top-submit-btn" style="display:none;" onclick="confirmSubmit()">Submit Quiz</button>
         </div>
     </div>
 
     <!-- Registration Block -->
     <div id="registration-block">
-        <h3>Student Details & Verification</h3>
+        <h3>Student Details & Configuration</h3>
         <div class="form-group">
             <label for="student-name">Full Name *</label>
             <input type="text" id="student-name" placeholder="Enter your full name" required>
@@ -296,7 +291,11 @@
             <label for="test-id">Test ID *</label>
             <input type="text" id="test-id" value="EWASTE-CARD-QUIZ-35" readonly style="background: rgba(0,0,0,0.03); font-weight: bold;">
         </div>
-        <button class="btn-submit-top btn-block" onclick="startQuiz()">Start Quiz</button>
+        <div class="form-group">
+            <label for="script-url">Google Sheet Web App URL (Option to paste custom URL):</label>
+            <input type="text" id="script-url" value="https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec" placeholder="https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec">
+        </div>
+        <button type="button" class="btn-submit-top btn-block" onclick="startQuiz()">Start Quiz</button>
     </div>
 
     <!-- Interactive Card Area -->
@@ -307,9 +306,9 @@
             <div id="card-content"></div>
             
             <div class="card-controls">
-                <button class="btn-nav" id="prev-btn" onclick="navigateQuestion(-1)">← Previous</button>
+                <button type="button" class="btn-nav" id="prev-btn" onclick="navigateQuestion(-1)">← Previous</button>
                 <span id="question-progress" style="font-weight:bold; font-size:0.9rem;">1 / 35</span>
-                <button class="btn-nav" id="next-btn" onclick="navigateQuestion(1)">Next →</button>
+                <button type="button" class="btn-nav" id="next-btn" onclick="navigateQuestion(1)">Next →</button>
             </div>
         </div>
     </div>
@@ -321,8 +320,8 @@
         <p id="time-taken-text"></p>
         <p id="sync-status" style="font-size: 0.95rem; font-weight: bold; color: var(--primary);"></p>
         
-        <button class="btn-submit-top btn-block" onclick="downloadPDFReport()">📄 Download Complete PDF Report</button>
-        <button class="btn-nav btn-block" style="background:#4b5563;" onclick="location.reload()">🔄 Restart Quiz</button>
+        <button type="button" class="btn-submit-top btn-block" onclick="downloadPDFReport()">📄 Download Complete PDF Report</button>
+        <button type="button" class="btn-nav btn-block" style="background:#4b5563;" onclick="location.reload()">🔄 Restart Quiz</button>
     </div>
 
     <!-- Designer Credentials -->
@@ -373,26 +372,16 @@ const originalQuestions = [
 let quizQuestions = [];
 let currentIndex = 0;
 let userAnswers = [];
-let perQuestionTime = 30; // 30 seconds countdown per question
+let perQuestionTime = 30;
 let timerInterval;
 let totalTimeSpent = 0;
 let overallTimerInterval;
 let isSubmitted = false;
 
-<script>
-/* =================================================================
-   EXAM CONFIGURATION  (change these for a future test)
-   ================================================================= */
-var CONFIG = {
-  TEST_ID:   "ewaste",                 // unique ID, saved in the Google Sheet (max 30 chars: letters, digits, - _)
-  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec"             // paste your existing Google Apps Script Web App URL here
-};
-
 function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
 }
 
-// Fisher-Yates Randomization Algorithm
 function shuffleArray(array) {
     let arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -426,7 +415,7 @@ function startQuiz() {
     const district = document.getElementById('student-district').value.trim();
 
     if (!name || !district) {
-        alert('Please enter both your Name and District to start the quiz.');
+        alert('Please enter both your Full Name and District to start.');
         return;
     }
 
@@ -517,7 +506,7 @@ function resetCardTimer() {
         return;
     }
 
-    perQuestionTime = 30; // Reset to 30s
+    perQuestionTime = 30;
     document.getElementById('timer').innerText = `⏳ ${perQuestionTime}s`;
 
     timerInterval = setInterval(() => {
@@ -563,6 +552,7 @@ function submitQuiz() {
     const name = document.getElementById('student-name').value.trim();
     const district = document.getElementById('student-district').value.trim();
     const testId = document.getElementById('test-id').value.trim();
+    const scriptUrl = document.getElementById('script-url').value.trim();
     const percentage = ((score / quizQuestions.length) * 100).toFixed(1);
 
     document.getElementById('score-text').innerHTML = `Candidate: <strong>${name}</strong> (${district})<br>Score: <strong>${score} / ${quizQuestions.length}</strong> (${percentage}%)`;
@@ -572,27 +562,30 @@ function submitQuiz() {
     document.getElementById('time-taken-text').innerText = `Total Time Taken: ${mins} min ${secs} sec`;
     document.getElementById('sync-status').innerText = "Logging score to database...";
 
-    // Submitting scores via Google Apps Script Web App URL
-    if (webAppUrl) {
-        fetch(webAppUrl, {
+    if (scriptUrl) {
+        const payload = new URLSearchParams({
+            testId: testId,
+            name: name,
+            district: district,
+            score: score,
+            total: quizQuestions.length,
+            percentage: percentage,
+            timeSpent: `${mins}m ${secs}s`
+        });
+
+        fetch(scriptUrl, {
             method: 'POST',
             mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                testId: testId,
-                name: name,
-                district: district,
-                score: score,
-                total: quizQuestions.length,
-                percentage: percentage,
-                timeSpent: `${mins}m ${secs}s`
-            })
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: payload.toString()
         }).then(() => {
             document.getElementById('sync-status').innerText = "✔ Score recorded in Google Sheet!";
         }).catch(err => {
             console.log('Sync Error:', err);
             document.getElementById('sync-status').innerText = "✔ Quiz completed!";
         });
+    } else {
+        document.getElementById('sync-status').innerText = "✔ Quiz completed (No Sheet URL specified).";
     }
 }
 
@@ -612,7 +605,6 @@ function downloadPDFReport() {
 
     let y = 15;
 
-    // Header Title
     doc.setFontSize(16);
     doc.setTextColor(5, 150, 105);
     doc.text("E-Waste & Mission LiFE Quiz Report", 14, y);
@@ -628,7 +620,6 @@ function downloadPDFReport() {
     doc.line(14, y, 196, y);
     y += 8;
 
-    // Questions and Answers List
     doc.setFontSize(10);
     quizQuestions.forEach((q, idx) => {
         if (y > 270) {
@@ -661,7 +652,6 @@ function downloadPDFReport() {
         y += 8;
     });
 
-    // Designer Credit Footer
     if (y > 260) {
         doc.addPage();
         y = 15;
@@ -677,3 +667,11 @@ function downloadPDFReport() {
 
 </body>
 </html>
+
+
+
+
+
+
+
+
