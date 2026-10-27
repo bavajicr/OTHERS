@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Waste & Mission LiFE Card Quiz | ZPHS Madanapalle</title>
+    <!-- jsPDF Library for generating PDF report -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #059669;
+            --primary-hover: #047857;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+            --correct: #10b981;
+            --incorrect: #ef4444;
+            --selected: #d1fae5;
+        }
+
+        body.dark-mode {
+            --bg: #111827;
+            --card-bg: #1f2937;
+            --text: #f3f4f6;
+            --border: #374151;
+            --selected: #064e3b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 15px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Top Header Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timer-badge {
+            background-color: #ef4444;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .btn-submit-top {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn-submit-top:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .mode-toggle {
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+        }
+
+        /* Registration Card */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text);
+            box-sizing: border-box;
+        }
+
+        /* Card Container & Palette */
+        .question-palette {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .q-badge {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            background: var(--card-bg);
+        }
+
+        .q-badge.active {
+            border-color: var(--primary);
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .q-badge.answered {
+            background-color: var(--selected);
+            border-color: var(--primary);
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .q-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .option-item {
+            margin-bottom: 10px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-label:hover {
+            background-color: rgba(5, 150, 105, 0.08);
+        }
+
+        input[type="radio"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        /* Bottom Controls */
+        .card-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-nav {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            flex: 1;
+            max-width: 140px;
+        }
+
+        .btn-nav:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Results & Review Mode */
+        .result-box {
+            display: none;
+            padding: 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .correct-opt {
+            background-color: rgba(16, 185, 129, 0.25) !important;
+            border-color: var(--correct) !important;
+        }
+
+        .incorrect-opt {
+            background-color: rgba(239, 68, 68, 0.25) !important;
+            border-color: var(--incorrect) !important;
+        }
+
+        .footer-credit {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--border);
+            text-align: center;
+            font-size: 0.85rem;
+            opacity: 0.85;
+        }
+
+        .btn-block {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-bar">
+        <div class="title">E-Waste & Mission LiFE Quiz</div>
+        <div class="header-actions">
+            <button class="mode-toggle" onclick="toggleDarkMode()">🌓</button>
+            <div class="timer-badge" id="timer" style="display:none;">⏳ 30s</div>
+            <button class="btn-submit-top" id="top-submit-btn" style="display:none;" onclick="confirmSubmit()">Submit Quiz</button>
+        </div>
+    </div>
+
+    <!-- Registration Block -->
+    <div id="registration-block">
+        <h3>Student Details & Verification</h3>
+        <div class="form-group">
+            <label for="student-name">Full Name *</label>
+            <input type="text" id="student-name" placeholder="Enter your full name" required>
+        </div>
+        <div class="form-group">
+            <label for="student-district">District *</label>
+            <input type="text" id="student-district" placeholder="Enter your district (e.g., Annamayya)" required>
+        </div>
+        <div class="form-group">
+            <label for="test-id">Test ID *</label>
+            <input type="text" id="test-id" value="EWASTE-CARD-QUIZ-35" readonly style="background: rgba(0,0,0,0.03); font-weight: bold;">
+        </div>
+        <button class="btn-submit-top btn-block" onclick="startQuiz()">Start Quiz</button>
+    </div>
+
+    <!-- Interactive Card Area -->
+    <div id="quiz-area" style="display:none;">
+        <div class="question-palette" id="palette-container"></div>
+        
+        <div class="card">
+            <div id="card-content"></div>
+            
+            <div class="card-controls">
+                <button class="btn-nav" id="prev-btn" onclick="navigateQuestion(-1)">← Previous</button>
+                <span id="question-progress" style="font-weight:bold; font-size:0.9rem;">1 / 35</span>
+                <button class="btn-nav" id="next-btn" onclick="navigateQuestion(1)">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Block -->
+    <div id="result-container" class="result-box">
+        <h2>Quiz Results Summary</h2>
+        <p id="score-text" style="font-size:1.1rem;"></p>
+        <p id="time-taken-text"></p>
+        <p id="sync-status" style="font-size: 0.95rem; font-weight: bold; color: var(--primary);"></p>
+        
+        <button class="btn-submit-top btn-block" onclick="downloadPDFReport()">📄 Download Complete PDF Report</button>
+        <button class="btn-nav btn-block" style="background:#4b5563;" onclick="location.reload()">🔄 Restart Quiz</button>
+    </div>
+
+    <!-- Designer Credentials -->
+    <div class="footer-credit">
+        The interactive quiz is designed by: <strong>C. RASOOL BAVAJI, ZPHS, MADANAPALLE, ANNAMAYYA DISTRICT</strong>
+    </div>
+</div>
+
+<script>
+const originalQuestions = [
+    { q: "When did India's Solid Waste Management Rules 2026 come into effect?", options: ["1st January 2026", "1st April 2026", "15th August 2026", "2nd October 2026"], answer: 1 },
+    { q: "Which Indian rules currently regulate e-waste management in India?", options: ["E-Waste Management Rules 2011", "E-Waste Management Rules 2016", "E-Waste Management Rules 2022", "Solid Waste Rules 2020"], answer: 2 },
+    { q: "What does E-Waste generally mean?", options: ["Food Waste", "Agricultural Waste", "Electrical and Electronic Equipment Waste", "Plastic Bottle Waste"], answer: 2 },
+    { q: "Which of the following is an example of E-Waste?", options: ["Garden Leaves", "Old Mobile Phone", "Cardboard Box", "Vegetable Peels"], answer: 1 },
+    { q: "What is the most effective time to segregate waste?", options: ["Once a month", "Once a week", "At the time of generation (At Source)", "When the landfill is full"], answer: 2 },
+    { q: "Which Ministry notified the E-Waste Management Rules 2022?", options: ["Ministry of Electronics and IT", "Ministry of Environment, Forest and Climate Change", "Ministry of Health", "Ministry of Urban Affairs"], answer: 1 },
+    { q: "Which of the following electronic products can become E-Waste at the end of their useful life?", options: ["Computers", "Mobile Phones", "Televisions", "All of the above"], answer: 3 },
+    { q: "Which hazardous substances present in E-Waste pose health risks?", options: ["Lead", "Mercury", "Cadmium", "All of the above"], answer: 3 },
+    { q: "What does 'Refurbishing' generally mean?", options: ["Dumping waste in rivers", "Repairing or restoring products for reuse", "Burning electronic items", "Exporting waste"], answer: 1 },
+    { q: "Under E-Waste Rules, E-Waste recycling should be carried out through:", options: ["Local scrap dealers", "Registered Recyclers", "Open burning grounds", "Household disposal"], answer: 1 },
+    { q: "What should a student do with an old mobile phone that is no longer needed?", options: ["Throw it into a river", "Burn it in the open", "Hand it to an authorized E-Waste collection center", "Store it permanently in trash"], answer: 2 },
+    { q: "Which of the following is NOT a responsible E-Waste practice?", options: ["Handing over to registered recyclers", "Burning electronic devices in the open", "Segregating electronic waste", "Refurbishing old devices"], answer: 1 },
+    { q: "Why is E-Waste recycling important?", options: ["To recover useful materials", "To minimize environmental hazards", "To prevent toxic leakage into soil", "All of the above"], answer: 3 },
+    { q: "A school replaces 100 old computers. What should it do?", options: ["Throw them in standard garbage", "Hand them over to authorized E-Waste recyclers", "Burn them in school compound", "Bury them underground"], answer: 1 },
+    { q: "Which Mission LiFE theme is directly related to responsible management of electronic devices?", options: ["Save Water", "Reduce E-Waste", "Adopt Healthy Lifestyles", "Say No to Single-Use Plastics"], answer: 1 },
+    { q: "Which action promotes reduction of E-Waste under Mission LiFE?", options: ["Repairing and reusing devices", "Buying new electronics frequently", "Throwing working items away", "Mixing electronic waste with wet waste"], answer: 0 },
+    { q: "Under the Solid Waste Management Rules 2026, into how many streams must waste be segregated at source?", options: ["2 Streams", "3 Streams", "4 Streams", "5 Streams"], answer: 2 },
+    { q: "E-Waste should ideally be deposited in which color-coded bin system?", options: ["Green Bin", "Blue Bin", "Black Bin", "Yellow Bin"], answer: 2 },
+    { q: "What is the main purpose of Source Segregation?", options: ["To increase landfill volume", "To enable appropriate processing, recycling, and safe disposal", "To burn all waste together", "To mix wet and dry waste"], answer: 1 },
+    { q: "Which practice is NOT appropriate for Solid Waste Management?", options: ["Composting organic waste", "Recycling plastic", "Open burning of waste", "Source segregation"], answer: 2 },
+    { q: "When is International E-Waste Day observed globally?", options: ["5th June", "14th October", "22nd April", "1st December"], answer: 1 },
+    { q: "What is the full form of EPR in E-Waste Management Rules?", options: ["Environmental Protection Responsibility", "Extended Producer Responsibility", "Electronic Product Recycling", "Emergency Processing Rule"], answer: 1 },
+    { q: "Which approach is encouraged to reduce disposal and recover resources?", options: ["Linear Economy", "Circular Economy", "Disposable Economy", "Static Economy"], answer: 1 },
+    { q: "If a student puts E-Waste into a Dry Waste (Blue) Bin, what does it indicate?", options: ["Perfect segregation practice", "Lack of awareness / Improper source segregation", "Appropriate disposal of electronics", "Ideal recycling setup"], answer: 1 },
+    { q: "Which principle best describes Mission LiFE's vision?", options: ["P3 - Pro Planet People", "3Rs - Only Recycle", "Profit First", "Industrial First"], answer: 0 },
+    { q: "What does 'LiFE' in Mission LiFE stand for?", options: ["Lifestyle for Environment", "Living in Forest Ecosystem", "Life in Future Earth", "Legal Instrument for Environment"], answer: 0 },
+    { q: "Which student demonstrates the spirit of responsible waste management and Mission LiFE?", options: ["One who mixes all waste together", "One who segregates waste, repairs gadgets, and sends E-Waste to recyclers", "One who leaves electronics running continuously", "One who burns plastic in open spaces"], answer: 1 },
+    { q: "Which statutory body monitors compliance and registers E-Waste recyclers across India?", options: ["Central Pollution Control Board (CPCB)", "Municipal Corporation", "Forest Department", "NITI Aayog"], answer: 0 },
+    { q: "What is the process of recovering precious metals (gold, copper, silver) from E-Waste called?", options: ["Surface Mining", "Urban Mining", "Deep Sea Mining", "Land Reclamation"], answer: 1 },
+    { q: "Which method is used to process organic/biodegradable waste?", options: ["Composting", "Incineration", "Refurbishing", "Urban Mining"], answer: 0 },
+    { q: "What does the term BWG stand for under Solid Waste Management Rules?", options: ["Bulk Waste Generator", "Basic Waste Group", "Bio Waste Gathering", "Balanced Waste Grid"], answer: 0 },
+    { q: "An entity qualifies as a Bulk Waste Generator (BWG) if it generates more than how much waste per day?", options: ["10 kg/day", "50 kg/day", "100 kg/day", "500 kg/day"], answer: 2 },
+    { q: "An institutional establishment/hostel qualifies as a BWG if it consumes more than how much water daily?", options: ["500 Liters", "1000 Liters", "4000 Liters", "10000 Liters"], answer: 2 },
+    { q: "What does the 'Crossed-out Wheeled Bin' symbol on electronic devices mean?", options: ["Dispose of in normal household bins", "Do not dispose of in standard household garbage bins", "Burn after usage", "Throw in public park bins"], answer: 1 },
+    { q: "At the state level in India, which regulatory body oversees pollution control compliance and monitors waste rules?", options: ["State Pollution Control Board (SPCB)", "District Collectorate", "Panchayat Office", "State Education Board"], answer: 0 }
+];
+
+let quizQuestions = [];
+let currentIndex = 0;
+let userAnswers = [];
+let perQuestionTime = 30; // 30 seconds countdown per question
+let timerInterval;
+let totalTimeSpent = 0;
+let overallTimerInterval;
+let isSubmitted = false;
+
+// Google Apps Script Tracking Endpoint
+const webAppUrl = "https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec";
+
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+}
+
+// Fisher-Yates Randomization Algorithm
+function shuffleArray(array) {
+    let arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+function randomizeQuestions() {
+    let shuffled = shuffleArray(originalQuestions);
+    quizQuestions = shuffled.map(item => {
+        let optionsWithIndex = item.options.map((opt, idx) => ({
+            text: opt,
+            isCorrect: idx === item.answer
+        }));
+        let shuffledOptions = shuffleArray(optionsWithIndex);
+        let newAnswer = shuffledOptions.findIndex(o => o.isCorrect);
+        
+        return {
+            q: item.q,
+            options: shuffledOptions.map(o => o.text),
+            answer: newAnswer
+        };
+    });
+    userAnswers = new Array(quizQuestions.length).fill(null);
+}
+
+function startQuiz() {
+    const name = document.getElementById('student-name').value.trim();
+    const district = document.getElementById('student-district').value.trim();
+
+    if (!name || !district) {
+        alert('Please enter both your Name and District to start the quiz.');
+        return;
+    }
+
+    randomizeQuestions();
+
+    document.getElementById('registration-block').style.display = 'none';
+    document.getElementById('quiz-area').style.display = 'block';
+    document.getElementById('top-submit-btn').style.display = 'block';
+    document.getElementById('timer').style.display = 'block';
+
+    renderPalette();
+    showCard(0);
+    startOverallTimer();
+}
+
+function renderPalette() {
+    const container = document.getElementById('palette-container');
+    container.innerHTML = '';
+    quizQuestions.forEach((_, idx) => {
+        const badge = document.createElement('div');
+        badge.className = `q-badge ${idx === currentIndex ? 'active' : ''} ${userAnswers[idx] !== null ? 'answered' : ''}`;
+        badge.innerText = idx + 1;
+        badge.onclick = () => jumpToQuestion(idx);
+        container.appendChild(badge);
+    });
+}
+
+function showCard(index) {
+    currentIndex = index;
+    resetCardTimer();
+
+    const cardContent = document.getElementById('card-content');
+    const q = quizQuestions[currentIndex];
+
+    let optionsHTML = '';
+    q.options.forEach((opt, oIdx) => {
+        let isChecked = userAnswers[currentIndex] === oIdx ? 'checked' : '';
+        let extraClass = '';
+
+        if (isSubmitted) {
+            if (oIdx === q.answer) extraClass = 'correct-opt';
+            else if (userAnswers[currentIndex] === oIdx) extraClass = 'incorrect-opt';
+        }
+
+        optionsHTML += `
+            <li class="option-item">
+                <label class="option-label ${extraClass}">
+                    <input type="radio" name="cardOption" value="${oIdx}" ${isChecked} ${isSubmitted ? 'disabled' : ''} onchange="saveAnswer(${oIdx})">
+                    ${opt}
+                </label>
+            </li>
+        `;
+    });
+
+    cardContent.innerHTML = `
+        <div class="q-title">${currentIndex + 1}. ${q.q}</div>
+        <ul class="options-list">${optionsHTML}</ul>
+    `;
+
+    document.getElementById('question-progress').innerText = `${currentIndex + 1} / ${quizQuestions.length}`;
+    document.getElementById('prev-btn').disabled = currentIndex === 0;
+    document.getElementById('next-btn').disabled = currentIndex === quizQuestions.length - 1;
+
+    renderPalette();
+}
+
+function saveAnswer(optIdx) {
+    if (isSubmitted) return;
+    userAnswers[currentIndex] = optIdx;
+    renderPalette();
+}
+
+function navigateQuestion(step) {
+    let newIndex = currentIndex + step;
+    if (newIndex >= 0 && newIndex < quizQuestions.length) {
+        showCard(newIndex);
+    }
+}
+
+function jumpToQuestion(idx) {
+    showCard(idx);
+}
+
+function resetCardTimer() {
+    clearInterval(timerInterval);
+    if (isSubmitted) {
+        document.getElementById('timer').style.display = 'none';
+        return;
+    }
+
+    perQuestionTime = 30; // Reset to 30s
+    document.getElementById('timer').innerText = `⏳ ${perQuestionTime}s`;
+
+    timerInterval = setInterval(() => {
+        perQuestionTime--;
+        document.getElementById('timer').innerText = `⏳ ${perQuestionTime}s`;
+
+        if (perQuestionTime <= 0) {
+            clearInterval(timerInterval);
+            if (currentIndex < quizQuestions.length - 1) {
+                navigateQuestion(1);
+            }
+        }
+    }, 1000);
+}
+
+function startOverallTimer() {
+    overallTimerInterval = setInterval(() => {
+        totalTimeSpent++;
+    }, 1000);
+}
+
+function confirmSubmit() {
+    if (confirm('Are you sure you want to submit your quiz answers now?')) {
+        submitQuiz();
+    }
+}
+
+function submitQuiz() {
+    isSubmitted = true;
+    clearInterval(timerInterval);
+    clearInterval(overallTimerInterval);
+
+    let score = 0;
+    quizQuestions.forEach((q, idx) => {
+        if (userAnswers[idx] === q.answer) score++;
+    });
+
+    document.getElementById('quiz-area').style.display = 'none';
+    document.getElementById('top-submit-btn').style.display = 'none';
+    document.getElementById('timer').style.display = 'none';
+    document.getElementById('result-container').style.display = 'block';
+
+    const name = document.getElementById('student-name').value.trim();
+    const district = document.getElementById('student-district').value.trim();
+    const testId = document.getElementById('test-id').value.trim();
+    const percentage = ((score / quizQuestions.length) * 100).toFixed(1);
+
+    document.getElementById('score-text').innerHTML = `Candidate: <strong>${name}</strong> (${district})<br>Score: <strong>${score} / ${quizQuestions.length}</strong> (${percentage}%)`;
+    
+    const mins = Math.floor(totalTimeSpent / 60);
+    const secs = totalTimeSpent % 60;
+    document.getElementById('time-taken-text').innerText = `Total Time Taken: ${mins} min ${secs} sec`;
+    document.getElementById('sync-status').innerText = "Logging score to database...";
+
+    // Submitting scores via Google Apps Script Web App URL
+    if (webAppUrl) {
+        fetch(webAppUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                testId: testId,
+                name: name,
+                district: district,
+                score: score,
+                total: quizQuestions.length,
+                percentage: percentage,
+                timeSpent: `${mins}m ${secs}s`
+            })
+        }).then(() => {
+            document.getElementById('sync-status').innerText = "✔ Score recorded in Google Sheet!";
+        }).catch(err => {
+            console.log('Sync Error:', err);
+            document.getElementById('sync-status').innerText = "✔ Quiz completed!";
+        });
+    }
+}
+
+function downloadPDFReport() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const name = document.getElementById('student-name').value.trim();
+    const district = document.getElementById('student-district').value.trim();
+    const testId = document.getElementById('test-id').value.trim();
+    
+    let score = 0;
+    quizQuestions.forEach((q, idx) => {
+        if (userAnswers[idx] === q.answer) score++;
+    });
+    const percentage = ((score / quizQuestions.length) * 100).toFixed(1);
+
+    let y = 15;
+
+    // Header Title
+    doc.setFontSize(16);
+    doc.setTextColor(5, 150, 105);
+    doc.text("E-Waste & Mission LiFE Quiz Report", 14, y);
+    y += 8;
+
+    doc.setFontSize(10);
+    doc.setTextColor(50, 50, 50);
+    doc.text(`Candidate: ${name} | District: ${district} | Test ID: ${testId}`, 14, y);
+    y += 6;
+    doc.text(`Final Score: ${score} / ${quizQuestions.length} (${percentage}%)`, 14, y);
+    y += 8;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, y, 196, y);
+    y += 8;
+
+    // Questions and Answers List
+    doc.setFontSize(10);
+    quizQuestions.forEach((q, idx) => {
+        if (y > 270) {
+            doc.addPage();
+            y = 15;
+        }
+
+        const userAnsIdx = userAnswers[idx];
+        const userAnsText = userAnsIdx !== null ? q.options[userAnsIdx] : "Unanswered";
+        const correctAnsText = q.options[q.answer];
+        const isCorrect = userAnsIdx === q.answer;
+
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0, 0, 0);
+        const splitQ = doc.splitTextToSize(`${idx + 1}. ${q.q}`, 180);
+        doc.text(splitQ, 14, y);
+        y += splitQ.length * 5;
+
+        doc.setFont("helvetica", "normal");
+        if (isCorrect) {
+            doc.setTextColor(16, 185, 129);
+            doc.text(`✔ Your Answer: ${userAnsText}`, 18, y);
+        } else {
+            doc.setTextColor(239, 68, 68);
+            doc.text(`✖ Your Answer: ${userAnsText}`, 18, y);
+            y += 5;
+            doc.setTextColor(5, 150, 105);
+            doc.text(`   Correct Answer: ${correctAnsText}`, 18, y);
+        }
+        y += 8;
+    });
+
+    // Designer Credit Footer
+    if (y > 260) {
+        doc.addPage();
+        y = 15;
+    }
+    y += 10;
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text("Quiz Designed By: C. RASOOL BAVAJI, ZPHS, MADANAPALLE, ANNAMAYYA DISTRICT", 14, y);
+
+    doc.save(`${name}_EWaste_Quiz_Report.pdf`);
+}
+</script>
+
+</body>
+</html>
+
+
+
+
+https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec
