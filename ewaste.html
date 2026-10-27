@@ -379,8 +379,14 @@ let totalTimeSpent = 0;
 let overallTimerInterval;
 let isSubmitted = false;
 
-// Google Apps Script Tracking Endpoint
-const webAppUrl = "https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec";
+<script>
+/* =================================================================
+   EXAM CONFIGURATION  (change these for a future test)
+   ================================================================= */
+var CONFIG = {
+  TEST_ID:   "ewaste",                 // unique ID, saved in the Google Sheet (max 30 chars: letters, digits, - _)
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzVTtzAuAmEbQRmFPYuGYHWZ9RzvywTXp7jNCVKEmdaWg9a_7alWhaqaEQFk5fCCG-THg/exec"             // paste your existing Google Apps Script Web App URL here
+};
 
 function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
