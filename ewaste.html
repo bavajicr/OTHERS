@@ -262,6 +262,27 @@
             padding: 12px;
             margin-top: 10px;
         }
+        input[type="text"], input[type="url"] {
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 100%;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: var(--card-bg);
+            color: var(--text);
+            font-size: 1rem;
+        }
+        .form-group { margin: 12px 0; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: 600; }
+        .form-group small { display: block; margin-top: 6px; line-height: 1.45; opacity: .8; overflow-wrap: anywhere; }
+        @media (max-width: 520px) {
+            body { padding: 8px; }
+            .container { padding: 13px; }
+            .title { font-size: 1.05rem; }
+            .card-controls { gap: 6px; }
+            .btn-nav { padding: 9px 10px; }
+        }
     </style>
 </head>
 <body>
@@ -291,8 +312,7 @@
             <label for="test-id">Test ID *</label>
             <input type="text" id="test-id" value="EWASTE-CARD-QUIZ-35" readonly style="background: rgba(0,0,0,0.03); font-weight: bold;">
         </div>
-        <!-- Google Sheet URL is configured in the SCRIPT_URL constant below. -->
-        <button type="button" class="btn-submit-top btn-block" onclick="startQuiz()">Start Quiz</button>
+     <button type="button" class="btn-submit-top btn-block" onclick="startQuiz()">Start Quiz</button>
     </div>
 
     <!-- Interactive Card Area -->
@@ -396,11 +416,23 @@ function shuffleArray(array) {
 function randomizeQuestions() {
     let shuffled = shuffleArray(originalQuestions);
     quizQuestions = shuffled.map(item => {
-        let optionsWithIndex = item.options.map((opt, idx) => ({
+        // Normalize source options so any "All of the above" choice is always option D/last.
+        let normalized = item.options.map((opt, idx) => ({
             text: opt,
             isCorrect: idx === item.answer
         }));
-        let shuffledOptions = shuffleArray(optionsWithIndex);
+        const allAboveIndex = normalized.findIndex(o => /all\s+of\s+the\s+above/i.test(o.text));
+        if (allAboveIndex >= 0 && allAboveIndex !== normalized.length - 1) {
+            const allAbove = normalized.splice(allAboveIndex, 1)[0];
+            normalized.push(allAbove);
+        }
+        let shuffledOptions = shuffleArray(normalized);
+        // Keep "All of the above" last even after randomization.
+        const shuffledAllAboveIndex = shuffledOptions.findIndex(o => /all\s+of\s+the\s+above/i.test(o.text));
+        if (shuffledAllAboveIndex >= 0 && shuffledAllAboveIndex !== shuffledOptions.length - 1) {
+            const allAbove = shuffledOptions.splice(shuffledAllAboveIndex, 1)[0];
+            shuffledOptions.push(allAbove);
+        }
         let newAnswer = shuffledOptions.findIndex(o => o.isCorrect);
         
         return {
@@ -554,7 +586,7 @@ function submitQuiz() {
     const name = document.getElementById('student-name').value.trim();
     const district = document.getElementById('student-district').value.trim();
     const testId = document.getElementById('test-id').value.trim();
-    const scriptUrl = SCRIPT_URL.trim();
+    const scriptUrl = document.getElementById('score-script-url').value.trim();
     const percentage = ((score / quizQuestions.length) * 100).toFixed(1);
 
     document.getElementById('score-text').innerHTML = `Candidate: <strong>${name}</strong> (${district})<br>Score: <strong>${score} / ${quizQuestions.length}</strong> (${percentage}%)`;
@@ -565,29 +597,39 @@ function submitQuiz() {
     document.getElementById('sync-status').innerText = "Logging score to database...";
 
     if (scriptUrl) {
-        const payload = new URLSearchParams({
-            testId: testId,
-            name: name,
-            district: district,
-            score: score,
-            total: quizQuestions.length,
-            percentage: percentage,
-            timeSpent: `${mins}m ${secs}s`
-        });
+        if (!/^https:\/\/script\.google\.com\/macros\/s\/[^\s]+\/exec(?:\?.*)?$/.test(scriptUrl)) {
+            document.getElementById('sync-status').innerText = "Quiz completed. Please check the Google Apps Script URL; it should be a deployed URL ending in /exec.";
+        } else {
+            const payload = new URLSearchParams({
+                action: 'submit',
+                testId: testId,
+                unit: 'E-Waste & Mission LiFE',
+                mode: 'Test Mode',
+                name: name,
+                district: district,
+                score: String(score),
+                total: String(quizQuestions.length),
+                percentage: String(percentage),
+                durationSeconds: String(totalTimeSpent),
+                timestamp: new Date().toISOString()
+            });
 
-        fetch(scriptUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: payload.toString()
-        }).then(() => {
-            document.getElementById('sync-status').innerText = "✔ Score recorded in Google Sheet!";
-        }).catch(err => {
-            console.log('Sync Error:', err);
-            document.getElementById('sync-status').innerText = "✔ Quiz completed!";
-        });
+            // no-cors sends the form, but cannot expose the Apps Script response to this page.
+            fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                body: payload.toString(),
+                keepalive: true
+            }).then(() => {
+                document.getElementById('sync-status').innerText = "Score submission sent. Please verify the new row in your Google Sheet; this page cannot confirm the server response.";
+            }).catch(err => {
+                console.error('Google Sheets submission error:', err);
+                document.getElementById('sync-status').innerText = "Quiz completed, but the score request could not be sent. Check your connection and Web App URL.";
+            });
+        }
     } else {
-        document.getElementById('sync-status').innerText = "✔ Quiz completed (No Sheet URL specified).";
+        document.getElementById('sync-status').innerText = "Quiz completed. No Google Sheets URL was entered, so no score was sent.";
     }
 }
 
